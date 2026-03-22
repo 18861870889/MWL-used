@@ -63,6 +63,9 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 git add -A
+if ($LASTEXITCODE -ne 0) {
+    throw "git add -A failed."
+}
 
 $baseRef = Get-HeadRef
 $changedLines = Get-ChangedLineCount -BaseRef $baseRef
@@ -82,10 +85,18 @@ if (-not $hasStagedChanges) {
 }
 
 git commit -m $CommitMessage
+if ($LASTEXITCODE -ne 0) {
+    throw "git commit failed."
+}
 
 if (-not $Branch) {
     $Branch = Get-CurrentBranch
 }
 
 git push $Remote $Branch
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "Push failed. The commit was created locally but was not pushed to $Remote/$Branch."
+    exit 1
+}
+
 Write-Host "Committed and pushed $changedLines changed lines to $Remote/$Branch."
